@@ -23,7 +23,6 @@ class Message(ABC):
 
     @staticmethod
     def deserialize(data: bytes) -> "Message":
-        print(data.decode())
         parts = [
             (typ, data)
             for typ, data in (

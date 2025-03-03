@@ -14,19 +14,24 @@ def parse_json_and_rest(s: str):
 
 
 class Client:
-    def __init__(self, host, port):
+    def __init__(self, host, port, prefix=""):
+        self.prefix = prefix
         self.host = host
         self.port = port
         self.conn = http.client.HTTPConnection(self.host, self.port)
 
     def request(self, msg):
+        # Add prefix to key
+        # important: This is a bug
+        msg.k = self.prefix + "_" + msg.k
+
         payload = msg.serialize()
         self.conn.request("POST", "/", payload)
         resp = self.conn.getresponse()
         print(resp.read().decode())
 
     def close(self):
-        self.sock.close()
+        self.conn.close()
         
 if __name__ == '__main__':
     c = Client('localhost', 8000)

@@ -59,7 +59,6 @@ class Store:
             os.makedirs(self.__name, exist_ok=True)
 
     def save(self) -> None:
-
         def stringify(v):
             match v:
                 case dict():
@@ -73,7 +72,6 @@ class Store:
 
         for k in self.__items:
             with open(f"{self.__name}/{stringify(k)}", 'w') as f:
-                print("stringify(self.__items[k])", stringify(self.__items[k]))
                 f.write(json.dumps(stringify(self.__items[k])))
 
     def load(self) -> None:
@@ -84,32 +82,23 @@ class Store:
     def insert(self, k: bytes, v: bytes) -> None | dict:
         k = k.decode('utf-8')
         v = json.loads(v)
-        print("[insert+] self.__items", self.__items)
-        
+
         result = self.__items.get(k)
         self.__items[k] = v
-
-        print("[insert-] self.__items", self.__items)
+        
         return result
 
     def get(self, k: bytes) -> None | dict:
         k = k.decode('utf-8')
-
-        print("[get+] self.__items", self.__items)
-        print("[get+] k", k)
-        result = self.__items.get(k)
-        print("[get-] self.__items", self.__items)
-        return result
+        return self.__items.get(k)
     
     def delete(self, k: bytes) -> None | dict:
         k = k.decode('utf-8')
-
-        print("[delete+] self.__items", self.__items)
         result = self.__items.get(k)
+
         if result is not None:
             del self.__items[k]
-        print("[delete-] self.__items", self.__items)
-        print("[delete-] result", result)
+
         return result
 
 
