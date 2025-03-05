@@ -15,6 +15,8 @@ def serialize(typ: msg_typ, data: str) -> bytes:
             msg += f"${len(data)}\r\n{data}\r\n".encode()
         case "number":
             msg += f":{data}\r\n".encode()
+        case "boolean":
+            msg += f"|{data}\r\n".encode()
         case "object":
             data = json.loads(data)
             msg += f"*{len(data)}\r\n".encode()
@@ -23,10 +25,14 @@ def serialize(typ: msg_typ, data: str) -> bytes:
                 match value:
                     case str():
                         msg += serialize("string", value)
+                    case True | False:
+                        msg += serialize("boolean", "true" if value else "false")
                     case int():
                         msg += serialize("number", str(value))
                     case dict():
                         msg += serialize("object", json.dumps(value))
+                    case None:
+                        msg += serialize("null", "null")
                     case _:
                         raise ValueError(f"Unsupported value type: {type(value)}")
         case _:
@@ -46,26 +52,34 @@ def deserialize(data: bytes) -> None | tuple[msg_typ, str, bytes]:
             length_end = data.find(b"\r\n")
             length = int(data[1:length_end])
             if length == -1:
-                return ("null", "", data[length_end + 2 :])
+                return ("null", None, data[length_end + 2 :])
             end = length_end + 2 + length
             return ("string", data[length_end + 2 : end].decode(), data[end + 2 :])
         case ":":
             # number
             end = data.find(b"\r\n")
-            return ("number", data[1:end].decode(), data[end + 2 :])
+            num = int(data[1:end].decode())
+            return ("number", num, data[end + 2 :])
+        case "|":
+            # boolean
+            end = data.find(b"\r\n")
+            boolean = data[1:end].decode() == "true"
+            return ("boolean", boolean, data[end + 2 :])
         case "*":
             # object
             length_end = data.find(b"\r\n")
             length = int(data[1:length_end])
             end = length_end + 2
             obj = {}
+            data = data[end:]
+
             while length > 0:
-                typ, key, data = deserialize(data[end:])
+                typ, key, data = deserialize(data)
                 end += len(data)
                 typ, value, data = deserialize(data)
                 obj[key] = value
                 length -= 1
-            return ("object", json.dumps(obj), data)
+            return ("object", obj, data)
         case _:
             raise ValueError(f"Unsupported type: {typ}")
 
@@ -89,11 +103,9 @@ class Message(ABC):
 
     @staticmethod
     def deserialize(data: bytes) -> "Message":
-        # This is a buggy method, if the string starts with `\n` or it
-        # contains `\n\n` in the middle it will not work as expected
         parts = []
         rest = data
-        while rest:
+        while len(rest) > 0:
             typ, data, rest = deserialize(rest)
             parts.append((typ, data))
 
@@ -163,6 +175,8 @@ def type_(v: object) -> msg_typ:
         return "null"
     if isinstance(v, str):
         return "string"
+    if v is True or v is False:
+        return "boolean"
     if isinstance(v, int):
         return "number"
     if isinstance(v, dict):
