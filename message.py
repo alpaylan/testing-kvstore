@@ -16,7 +16,6 @@ def serialize(typ: msg_typ, data: str) -> bytes:
         case "number":
             msg += f":{data}\r\n".encode()
         case "object":
-            print("object data:", data)
             data = json.loads(data)
             msg += f"*{len(data)}\r\n".encode()
             for key, value in data.items():
@@ -61,7 +60,6 @@ def deserialize(data: bytes) -> None | tuple[msg_typ, str, bytes]:
             end = length_end + 2
             obj = {}
             while length > 0:
-                print(data[end:])
                 typ, key, data = deserialize(data[end:])
                 end += len(data)
                 typ, value, data = deserialize(data)
@@ -85,7 +83,6 @@ class Message(ABC):
     def serialize(self) -> bytes:
         parts = self.parts()
         msg = b""
-        print(parts)
         for typ, data in parts:
             msg += serialize(typ, data)
         return msg
@@ -98,7 +95,6 @@ class Message(ABC):
         rest = data
         while rest:
             typ, data, rest = deserialize(rest)
-            print(typ, data, rest)
             parts.append((typ, data))
 
         message_classes = {
@@ -188,7 +184,6 @@ class Insert(Message):
         ]
 
     def from_parts(parts: list[tuple[msg_typ, str]]) -> "Insert":
-        print(parts)
         assert parts[0][1] == "insert"
         return Insert(k=parts[1][1], v=parts[2][1])
 

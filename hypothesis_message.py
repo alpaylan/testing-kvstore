@@ -1,5 +1,5 @@
 from hypothesis import given
-from hypothesis.strategies import composite, DrawFn, one_of, text
+from hypothesis.strategies import composite, DrawFn, one_of, text, integers
 from message import Insert, Get, Delete, Select, Message
 import string
 
@@ -8,25 +8,33 @@ def inserts(draw: DrawFn) -> Insert:
     # todo: generate random keys and values
     k = draw(text(alphabet=string.ascii_letters + string.digits))
     v = draw(text(alphabet=string.ascii_letters + string.digits))
-    return Insert(k=str(k), v=v)
+    return Insert(k=k, v=v)
 
 
 @composite
 def gets(draw: DrawFn) -> Get:
     k = draw(text(alphabet=string.ascii_letters + string.digits))
-    return Get(k=str(k))
+    return Get(k=k)
 
 
 @composite
 def deletes(draw: DrawFn) -> Delete:
     k = draw(text(alphabet=string.ascii_letters + string.digits))
-    return Delete(k=str(k))
+    return Delete(k=k)
 
 
 @composite
 def selects(draw: DrawFn) -> Select:
     k = draw(text(alphabet=string.ascii_letters + string.digits))
-    return Select(k=str(k))
+    # randomly switch subsequences with *
+    try:
+        left = draw(integers(min_value=0, max_value=len(k) - 1))
+        right = draw(integers(min_value=left, max_value=len(k)))
+        k = k[:left] + "*" + k[right:]
+    except Exception:
+        pass
+
+    return Select(k=k)
 
 
 @composite

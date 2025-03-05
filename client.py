@@ -30,7 +30,7 @@ class Client:
         payload = msg.serialize()
         self.conn.request("POST", "/", payload)
         resp = self.conn.getresponse()
-        print(resp.read().decode())
+        return resp.read().decode()
 
     def close(self):
         self.conn.close()

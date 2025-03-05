@@ -15,7 +15,6 @@ class StoreHandler(http.server.SimpleHTTPRequestHandler):
     def do_POST(self):
         content_length = int(self.headers["Content-Length"])
         msg = self.rfile.read(content_length)
-        print(msg)
         msg = Message.deserialize(msg)
 
         if not self.server.running and not isinstance(msg, Startup):

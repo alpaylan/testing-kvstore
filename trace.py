@@ -6,7 +6,7 @@ from threading import Thread
 import subprocess
 import os
 import signal
-type ServerInteraction = tuple[Literal["startup", "shutdown"]]
+type ServerInteraction = tuple[Literal["startup", "stop", "shutdown"]]
 type ClientInteraction = tuple[Literal["message"], Client, Message]
 
 type Interaction = ServerInteraction | ClientInteraction
@@ -42,12 +42,6 @@ class MyServer:
         self.server.server_close()  # Closes socket
         self.thread.join()
         print("Server stopped.")
-
-# Example usage:
-server = MyServer()
-server.start()
-
-server.stop()  # Stop the server gracefully
 
 
 def server_thread():

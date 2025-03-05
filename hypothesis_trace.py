@@ -26,12 +26,12 @@ def stops(draw: DrawFn) -> ServerInteraction:
 @composite
 def interactions(draw: DrawFn, clients: list[Client]) -> Interaction:
     choices = [
-        (0, startups()),
-        (0, stops()),
-        (3, inserts()),
-        (5, gets()),
-        (2, deletes()),
-        (5, selects()),
+        (1, startups()),
+        (1, stops()),
+        (6, inserts()),
+        (10, gets()),
+        (4, deletes()),
+        (10, selects()),
     ]
     # Flatten the list by repeating each choice by its weight
     flat = [choice for (weight, choice) in choices for _ in range(weight)]
@@ -70,7 +70,7 @@ def traces(draw: DrawFn) -> Trace:
 
 
 @given(traces())
-@settings(deadline=datetime.timedelta(milliseconds=5000))
+@settings(deadline=datetime.timedelta(milliseconds=5000), verbosity=2)
 def test_execute(trace: Trace) -> None:
     execute(trace)
 
