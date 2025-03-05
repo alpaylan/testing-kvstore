@@ -1,5 +1,5 @@
 from message import Message, Startup, Stop, Select
-from hypothesis import given, settings
+from hypothesis import given, settings, Verbosity
 from trace import Trace, MyServer
 from hypothesis_trace import traces
 from client import Client
@@ -10,7 +10,7 @@ import json
 
 def check_isolation(result: str, client: Client, message: Message):
     match message:
-        case Select(_):
+        case Select(k):
             try:
                 result = json.loads(result)
             except Exception as e:
@@ -19,7 +19,7 @@ def check_isolation(result: str, client: Client, message: Message):
                 for obj in result:
                     key: str = next(iter(obj))
                     prefix = key[: key.find("_")]
-                    assert prefix == client.prefix, f"{prefix} != {client.prefix}"
+                    assert prefix == client.prefix, f"select({k}) leaks data from client '{prefix}' to '{client.prefix}'"
         case _:
             pass
 
@@ -48,7 +48,7 @@ def execute(trace: Trace):
 
 
 @given(traces())
-@settings(deadline=datetime.timedelta(milliseconds=5000))
+@settings(deadline=datetime.timedelta(milliseconds=5000), verbosity=Verbosity.verbose)
 def test_isolation(trace: Trace) -> None:
     execute(trace)
 

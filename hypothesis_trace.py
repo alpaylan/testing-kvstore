@@ -56,8 +56,8 @@ def clients(draw: DrawFn) -> Client:
 
 @composite
 def traces(draw: DrawFn) -> Trace:
-    n = draw(integers(min_value=100, max_value=1000))
-    cs = draw(lists(clients(), min_size=3, max_size=30, unique_by=lambda c: c.prefix))
+    n = draw(integers(min_value=1, max_value=1000))
+    cs = draw(lists(clients(), min_size=1, max_size=30, unique_by=lambda c: c.prefix))
     trace = []
 
     for _ in range(n):

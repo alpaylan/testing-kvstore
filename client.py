@@ -36,7 +36,10 @@ class Client:
         self.conn.close()
 
     def __str__(self):
-        return f"Client<{self.prefix}>({self.host}, {self.port})"
+        return f"Client<'{self.prefix}'>({self.host}, {self.port})"
+    
+    def __repr__(self):
+        return str(self)
         
 if __name__ == '__main__':
     prefix = sys.argv[1] if len(sys.argv) > 1 else ""
