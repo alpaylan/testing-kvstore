@@ -1,7 +1,8 @@
 
 import http.client
-from message import Insert, Get, Delete
+from message import Insert, Get, Delete, Select, Message
 import json
+import sys
 
 def parse_json_and_rest(s: str):
     s = s.strip()  # Remove leading/trailing spaces
@@ -20,10 +21,11 @@ class Client:
         self.port = port
         self.conn = http.client.HTTPConnection(self.host, self.port)
 
-    def request(self, msg):
+    def request(self, msg: Message):
         # Add prefix to key
         # important: This is a bug
-        msg.k = self.prefix + "_" + msg.k
+        if hasattr(msg, "k"):
+            msg.k = self.prefix + "_" + msg.k
 
         payload = msg.serialize()
         self.conn.request("POST", "/", payload)
@@ -32,9 +34,13 @@ class Client:
 
     def close(self):
         self.conn.close()
+
+    def __str__(self):
+        return f"Client<{self.prefix}>({self.host}, {self.port})"
         
 if __name__ == '__main__':
-    c = Client('localhost', 8000)
+    prefix = sys.argv[1] if len(sys.argv) > 1 else ""
+    c = Client('localhost', 8000, prefix)
     
     while True:
         cmd = input("skv> ")
@@ -81,6 +87,15 @@ if __name__ == '__main__':
 
                 (_, k) = args
                 c.request(Get(k=k))
+
+            case ".select":
+                args = cmd.split(" ", 1)
+                if len(args) != 2:
+                    print("Usage: .select <key>")
+                    continue
+
+                (_, k) = args
+                c.request(Select(k=k))
 
             case ".delete":
                 args = cmd.split(" ", 1)
