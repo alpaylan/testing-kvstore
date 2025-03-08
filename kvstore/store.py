@@ -8,7 +8,7 @@ from message import Message, Insert, Get, Delete, Select, Startup, Stop, Shutdow
 class StoreServer(http.server.HTTPServer):
     def __init__(self, server_address, handler_class):
         super().__init__(server_address, handler_class)
-        self.store = Store("store")
+        self.store = Store(".store")
         self.running = True
 
 class StoreHandler(http.server.SimpleHTTPRequestHandler):

@@ -8,11 +8,14 @@ from hypothesis.strategies import (
     lists,
     text,
 )
-from trace import Trace, Interaction, ServerInteraction, execute
-from hypothesis_message import inserts, gets, deletes, selects
-from client import Client
+
+from kvstore.trace import Trace, Interaction, ServerInteraction, execute
+from kvstore.test_message import inserts, gets, deletes, selects
+from kvstore.client import Client
+
 import string
 import datetime
+
 
 @composite
 def startups(draw: DrawFn) -> ServerInteraction:
@@ -22,6 +25,7 @@ def startups(draw: DrawFn) -> ServerInteraction:
 @composite
 def stops(draw: DrawFn) -> ServerInteraction:
     return ("stop",)
+
 
 @composite
 def interactions(draw: DrawFn, clients: list[Client]) -> Interaction:
@@ -54,6 +58,7 @@ def clients(draw: DrawFn) -> Client:
         prefix,
     )
 
+
 @composite
 def traces(draw: DrawFn) -> Trace:
     n = draw(integers(min_value=1, max_value=1000))
@@ -63,7 +68,7 @@ def traces(draw: DrawFn) -> Trace:
     for _ in range(n):
         interaction = draw(interactions(cs))
         trace.append(interaction)
-    
+
     trace.append(("shutdown",))
 
     return trace
@@ -73,6 +78,7 @@ def traces(draw: DrawFn) -> Trace:
 @settings(deadline=datetime.timedelta(milliseconds=5000), verbosity=2)
 def test_execute(trace: Trace) -> None:
     execute(trace)
+
 
 if __name__ == "__main__":
     # test_execute()

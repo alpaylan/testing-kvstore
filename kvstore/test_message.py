@@ -1,5 +1,5 @@
 from hypothesis import given, settings, Verbosity
-from message import Insert, Get, Delete, Select, Message
+from kvstore.message import Insert, Get, Delete, Select, Message
 from hypothesis.strategies import (
     composite,
     DrawFn,

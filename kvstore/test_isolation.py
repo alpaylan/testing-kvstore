@@ -1,8 +1,8 @@
-from message import Message, Startup, Stop, Select
 from hypothesis import given, settings, Verbosity
-from trace import Trace, MyServer
-from hypothesis_trace import traces
-from client import Client
+from kvstore.message import Message, Startup, Stop, Select
+from kvstore.trace import Trace, MyServer
+from kvstore.test_trace import traces
+from kvstore.client import Client
 
 import datetime
 import subprocess

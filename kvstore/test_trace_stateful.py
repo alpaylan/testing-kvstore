@@ -13,7 +13,7 @@ from hypothesis.strategies import (
 from client import Client
 from message import Insert, Get, Delete, Select, Message, Startup, Stop
 from trace import Trace, Interaction, ServerInteraction, MyServer
-from hypothesis_message import inserts
+from message import inserts
 
 import string
 import datetime

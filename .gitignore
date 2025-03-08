@@ -1,5 +1,5 @@
 
-store/
+.store/
 .hypothesis/
 .venv/
 __pycache__/
