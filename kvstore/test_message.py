@@ -11,6 +11,7 @@ from hypothesis.strategies import (
     dictionaries,
 )
 
+import os
 import string
 
 @composite
@@ -25,9 +26,9 @@ def json(draw: DrawFn, depth: int = 3) -> any:
             (1, none()),
             (1, booleans()),
             (1, integers()),
-            (1, text(alphabet=string.ascii_letters + string.digits, min_size=1)),
+            (1, text(alphabet=string.printable, min_size=1)),
             (depth, dictionaries(
-                keys=text(alphabet=string.ascii_letters + string.digits, min_size=1),
+                keys=text(alphabet=string.printable, min_size=1),
                 values=json(depth=depth - 1),
                 min_size=0,
                 max_size=10,
@@ -38,26 +39,26 @@ def json(draw: DrawFn, depth: int = 3) -> any:
 
 @composite
 def inserts(draw: DrawFn) -> Insert:
-    k = draw(text(alphabet=string.ascii_letters + string.digits, min_size=1))
+    k = draw(text(alphabet=string.printable, min_size=1))
     v = draw(json())
     return Insert(k=k, v=v)
 
 
 @composite
 def gets(draw: DrawFn) -> Get:
-    k = draw(text(alphabet=string.ascii_letters + string.digits, min_size=1))
+    k = draw(text(alphabet=string.printable, min_size=1))
     return Get(k=k)
 
 
 @composite
 def deletes(draw: DrawFn) -> Delete:
-    k = draw(text(alphabet=string.ascii_letters + string.digits, min_size=1))
+    k = draw(text(alphabet=string.printable, min_size=1))
     return Delete(k=k)
 
 
 @composite
 def selects(draw: DrawFn) -> Select:
-    k = draw(text(alphabet=string.ascii_letters + string.digits, min_size=1))
+    k = draw(text(alphabet=string.printable, min_size=1))
     # randomly switch subsequences with *
     try:
         left = draw(integers(min_value=0, max_value=len(k) - 1))
@@ -84,3 +85,4 @@ def test_serialize_deserialize(msg: Message) -> None:
 
 if __name__ == "__main__":
     test_serialize_deserialize()
+    os.system("rm -rf .hypothesis")

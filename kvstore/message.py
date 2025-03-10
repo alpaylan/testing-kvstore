@@ -5,7 +5,7 @@ import json
 type msg_typ = Literal["null", "string", "number", "object"]
 
 
-def serialize(typ: msg_typ, data: str) -> bytes:
+def serialize(typ: msg_typ, data: str | dict) -> bytes:
     msg = b""
 
     match typ:
@@ -16,9 +16,8 @@ def serialize(typ: msg_typ, data: str) -> bytes:
         case "number":
             msg += f":{data}\r\n".encode()
         case "boolean":
-            msg += f"|{data}\r\n".encode()
+            msg += f"|{'true' if data else 'false'}\r\n".encode()
         case "object":
-            data = json.loads(data)
             msg += f"*{len(data)}\r\n".encode()
             for key, value in data.items():
                 msg += serialize("string", key)
@@ -26,13 +25,13 @@ def serialize(typ: msg_typ, data: str) -> bytes:
                     case str():
                         msg += serialize("string", value)
                     case True | False:
-                        msg += serialize("boolean", "true" if value else "false")
+                        msg += serialize("boolean", value)
                     case int():
-                        msg += serialize("number", str(value))
+                        msg += serialize("number", value)
                     case dict():
-                        msg += serialize("object", json.dumps(value))
+                        msg += serialize("object", value)
                     case None:
-                        msg += serialize("null", "null")
+                        msg += serialize("null", value)
                     case _:
                         raise ValueError(f"Unsupported value type: {type(value)}")
         case _:
@@ -141,8 +140,22 @@ class Message(ABC):
     def deserialize(data: bytes) -> "Message":
         # This is a buggy method, if the string starts with `\n` or it
         # contains `\n\n` in the middle it will not work as expected
+        def de(typ: msg_typ, data: bytes) -> str | int | bool | dict:
+            match typ:
+                case b'null':
+                    return None
+                case b'string':
+                    return data.decode()
+                case b'number':
+                    return int(data)
+                case b'boolean':
+                    return data.decode() == "True"
+                case b'object':
+                    return eval(data)
+                case _:
+                    raise ValueError(f"Unsupported type: {typ}")
         parts = [
-            (typ, data)
+            (typ, de(typ, data))
             for typ, data in (
                 part.split(b"\r\n", 1)
                 for part in data.split(b"\n\n")
@@ -158,13 +171,13 @@ class Message(ABC):
             "shutdown": Shutdown,
         }
 
-        cls = message_classes[parts[0][1].decode()]
+        cls = message_classes[parts[0][1]]
 
         return cls.from_parts(parts)
     """
 
     def __repr__(self) -> str:
-        return f"{self.__class__.__name__}({', '.join(f'{k}={v}' for k, v in self.__dict__.items())})"
+        return f"{self.__class__.__name__}({', '.join(f'{k}={repr(v)}' for k, v in self.__dict__.items())})"
 
     def __eq__(self, other: object) -> bool:
         return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
@@ -190,11 +203,11 @@ class Insert(Message):
         self.k = kwargs["k"]
         self.v = kwargs["v"]
 
-    def parts(self) -> list[tuple[msg_typ, str]]:
+    def parts(self) -> list[tuple[msg_typ, str | int | bool | dict]]:
         return [
             ("string", "insert"),
             ("string", self.k),
-            (type_(self.v), self.v if type_(self.v) == "string" else json.dumps(self.v)),
+            (type_(self.v), self.v),
         ]
 
     def from_parts(parts: list[tuple[msg_typ, str]]) -> "Insert":
@@ -282,17 +295,26 @@ class Shutdown(Message):
 
 if __name__ == "__main__":
     msg = Insert(k="foo", v={"bar": 42})
+    print(msg)
     print(msg.serialize())
     print(Message.deserialize(msg.serialize()))
 
     msg = Get(k="foo")
+    print(msg)
     print(msg.serialize())
     print(Message.deserialize(msg.serialize()))
 
     msg = Delete(k="foo")
+    print(msg)
     print(msg.serialize())
     print(Message.deserialize(msg.serialize()))
 
     msg = Insert(k="", v="")
+    print(msg)
+    print(msg.serialize())
+    print(Message.deserialize(msg.serialize()))
+
+    msg = Select(k="fo\n\no")
+    print(msg)
     print(msg.serialize())
     print(Message.deserialize(msg.serialize()))
