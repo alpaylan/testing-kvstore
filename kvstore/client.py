@@ -30,7 +30,9 @@ class Client:
         payload = msg.serialize()
         self.conn.request("POST", "/", payload)
         resp = self.conn.getresponse()
-        return resp.read().decode()
+        resp = resp.read().decode()
+        print(resp)
+        return resp
 
     def close(self):
         self.conn.close()
@@ -44,9 +46,11 @@ class Client:
 if __name__ == '__main__':
     prefix = sys.argv[1] if len(sys.argv) > 1 else ""
     c = Client('localhost', 8000, prefix)
-    
+
+    marker = "skv> " if prefix == "" else f"skv<[{prefix}]> "
+
     while True:
-        cmd = input("skv> ")
+        cmd = input(marker)
         typ = None
         if len(cmd.split(" ", 1)) > 0:
             typ = cmd.split(" ", 1)[0].lower()

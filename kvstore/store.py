@@ -25,6 +25,7 @@ class StoreHandler(http.server.SimpleHTTPRequestHandler):
 
         match msg:
             case Insert(k, v):
+                print(f".insert {k} {v}")
                 v = self.server.store.insert(k, v)
                 self.send_response(200)
                 self.end_headers()
@@ -33,6 +34,7 @@ class StoreHandler(http.server.SimpleHTTPRequestHandler):
                 else:
                     self.wfile.write(b"OK")
             case Get(k):
+                print(f".get {k}")
                 v = self.server.store.get(k)
                 if v is not None:
                     self.send_response(200)
@@ -43,6 +45,7 @@ class StoreHandler(http.server.SimpleHTTPRequestHandler):
                     self.end_headers()
                     self.wfile.write(b"NOT FOUND")
             case Delete(k):
+                print(f".delete {k}")
                 v = self.server.store.delete(k)
                 if v is not None:
                     self.send_response(200)
@@ -53,6 +56,7 @@ class StoreHandler(http.server.SimpleHTTPRequestHandler):
                     self.end_headers()
                     self.wfile.write(b"NOT FOUND")
             case Select(k):
+                print(f".select {k}")
                 vs = self.server.store.select(k)
                 vs = json.dumps(vs)
                 self.send_response(200)
