@@ -1,4 +1,4 @@
-from hypothesis import given
+from hypothesis import given, Verbosity, settings
 from hypothesis.strategies import composite, integers, lists, DrawFn
 
 class SortedList:
@@ -59,16 +59,17 @@ class SortedList:
     
 @composite
 def sorted_lists(draw: DrawFn) -> SortedList:
-    length = draw(integers(min_value=0, max_value=100))
+    values = []
+
     lower_bound = draw(integers())
-
-    sl = SortedList()
-
+    length = draw(integers(min_value=0, max_value=100))
     for _ in range(length):
         value = draw(integers(min_value=lower_bound))
         lower_bound = value
-        sl = sl.insert(value)
+        values.append(value)
 
+    sl = SortedList()
+    sl.values = values
     return sl
 
 @given(sorted_lists(), integers())
@@ -84,8 +85,9 @@ def test_sorting_postcondition(sl: SortedList, x: int):
 def test_sorting_metamorphic(sl: SortedList, x: int, y: int):
     assert sl.insert(x).insert(y) == sl.insert(y).insert(x)
 
-@given(lists(integers()), integers())
-def test_sorting_model(l: list, x: int):
+@given(...)
+@settings(verbosity=Verbosity.verbose)
+def test_sorting_model(l: list[int], x: int):
     sl = SortedList(l)
     if len(l) != 0:
         assert sl.last() == max(l), f"{sl.last()} != {max(l)}"
