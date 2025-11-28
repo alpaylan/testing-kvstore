@@ -1,0 +1,219 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>KVStore Visualization</title>
+    <link rel="stylesheet" href="https://pyscript.net/releases/2024.11.1/core.css" />
+    <script type="module" src="https://pyscript.net/releases/2024.11.1/core.js"></script>
+    <style>
+        :root {
+            color-scheme: light;
+        }
+
+        body {
+            font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+            margin: 0;
+            padding: 24px;
+            line-height: 1.4;
+            background: #ffffff;
+            color: #111111;
+        }
+
+        .nav {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            padding: 10px 16px;
+            border-bottom: 1px solid #e1e4e8;
+            background: #fff;
+            margin: -24px -24px 16px;
+        }
+
+        .nav a {
+            text-decoration: none;
+            color: #24292f;
+            padding: 6px 10px;
+            border-radius: 6px;
+        }
+
+        .nav a.active,
+        .nav a:hover {
+            background: #f6f8fa;
+        }
+
+        h1 {
+            margin-top: 0;
+            font-size: 20px;
+        }
+
+        .app {
+            display: grid;
+            grid-template-columns: 360px 1fr;
+            gap: 16px;
+            align-items: start;
+        }
+
+        .panel {
+            border: 1px solid color-mix(in oklab, CanvasText 12%, Canvas 88%);
+            border-radius: 8px;
+            padding: 12px;
+            background: color-mix(in oklab, Canvas 96%, CanvasText 4%);
+        }
+
+        .field {
+            margin-bottom: 10px;
+        }
+
+        label {
+            font-size: 12px;
+            display: block;
+            margin-bottom: 4px;
+            color: color-mix(in oklab, CanvasText 70%, Canvas 30%);
+        }
+
+        input[type="text"],
+        textarea {
+            width: 100%;
+            box-sizing: border-box;
+            padding: 8px;
+            border-radius: 6px;
+            border: 1px solid color-mix(in oklab, CanvasText 16%, Canvas 84%);
+            background: Canvas;
+            color: CanvasText;
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+        }
+
+        textarea {
+            min-height: 88px;
+            resize: vertical;
+        }
+
+        .buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        button {
+            padding: 8px 10px;
+            border-radius: 6px;
+            border: 1px solid color-mix(in oklab, CanvasText 20%, Canvas 80%);
+            background: color-mix(in oklab, Canvas 92%, CanvasText 8%);
+            color: CanvasText;
+            cursor: pointer;
+        }
+
+        button:active {
+            transform: translateY(1px);
+        }
+
+        .output pre {
+            margin: 0;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+
+        .state-table {
+            width: 100%;
+            border-collapse: collapse;
+            table-layout: fixed;
+        }
+
+        .state-table th,
+        .state-table td {
+            border: 1px solid color-mix(in oklab, CanvasText 16%, Canvas 84%);
+            padding: 6px 8px;
+            vertical-align: top;
+        }
+
+        .state-table th {
+            text-align: left;
+            background: color-mix(in oklab, Canvas 92%, CanvasText 8%);
+            font-size: 12px;
+        }
+
+        .state-table td code {
+            white-space: pre-wrap;
+            word-break: break-word;
+            display: block;
+        }
+
+        .cols {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .muted {
+            font-size: 12px;
+            color: color-mix(in oklab, CanvasText 60%, Canvas 40%);
+        }
+
+        @media (max-width: 900px) {
+            .app {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <nav class="nav">
+        <a href="index.html" class="active">App</a>
+        <a href="tests.html">Hypothesis</a>
+    </nav>
+    <h1>KVStore Visualization (PyScript)</h1>
+    <div style="display:flex;gap:8px;align-items:center;margin-top:-8px;margin-bottom:16px;flex-wrap:wrap;">
+        <p class="muted" style="margin:0;">Signed in as <select id="username"></select></p>
+    </div>
+    <div class="app">
+        <div class="panel">
+            <div class="field">
+                <label for="key">Key</label>
+                <input id="key" type="text" placeholder="e.g. 1" />
+            </div>
+            <div class="field">
+                <label for="value">Value (JSON or plain text)</label>
+                <textarea id="value" placeholder='e.g. {"name":"Ada","age":37}'></textarea>
+            </div>
+            <div class="field">
+                <label for="regex">Select (regex)</label>
+                <input id="regex" type="text" placeholder="e.g. .*" />
+            </div>
+            <div class="buttons">
+                <button id="btn-insert">Insert/Update</button>
+                <button id="btn-get">Get</button>
+                <button id="btn-delete">Delete</button>
+                <button id="btn-select">Select</button>
+                <button id="btn-clear-output">Clear Output</button>
+            </div>
+            <p class="muted">Tip: Values accept JSON (preferred). If parsing fails, the raw text is stored.</p>
+        </div>
+        <div class="panel output">
+            <div class="cols">
+                <div>
+                    <h3 style="margin-top:4px;font-size:14px;">Result</h3>
+                    <pre id="output"></pre>
+                </div>
+                <div>
+                    <h3 style="margin-top:4px;font-size:14px;">Current State (select .*)</h3>
+                    <div id="state"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <py-config>
+        packages = []
+        [[fetch]]
+        from = "."
+        files = ["store.py", "message.py", "webapp.py"]
+    </py-config>
+
+    <py-script src="webapp.py"></py-script>
+</body>
+
+</html>
