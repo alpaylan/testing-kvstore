@@ -117,4 +117,101 @@ export function A11yAnim(): React.ReactElement {
   )
 }
 
+export function IOAnim(): React.ReactElement {
+  const samples = [
+    { x: '2', y: '4' },
+    { x: '3', y: '9' },
+    { x: '4', y: '16' }
+  ]
+  return (
+    <div className="anim">
+      <div className="anim-title">Functional correctness (I/O)</div>
+      <div className="board" style={{ gridTemplateColumns: '1fr' }}>
+        {samples.map((s, i) => (
+          <motion.div
+            key={i}
+            className="tile"
+            initial={{ opacity: 0, x: -12 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.4, delay: i * 0.2 }}
+          >
+            f({s.x}) → {s.y}
+          </motion.div>
+        ))}
+      </div>
+      <div className="legend">check f(x) → y mappings</div>
+    </div>
+  )
+}
+
+export function PerfAnim(): React.ReactElement {
+  const bars = [40, 70, 55, 85]
+  return (
+    <div className="anim">
+      <div className="anim-title">Performance</div>
+      <div className="queue" style={{ height: 140 }}>
+        {bars.map((h, i) => (
+          <motion.div
+            key={i}
+            className="qbar"
+            initial={{ height: 10 }}
+            animate={{ height: h }}
+            transition={{ duration: 0.6, delay: i * 0.2 }}
+          />
+        ))}
+      </div>
+      <div className="legend">tasks under time constraints</div>
+    </div>
+  )
+}
+
+export function SecurityAnim(): React.ReactElement {
+  return (
+    <div className="anim">
+      <div className="anim-title">Security</div>
+      <div className="board" style={{ gridTemplateColumns: '1fr 1fr' }}>
+        <motion.div
+          className="tile"
+          initial={{ borderColor: '#ffffff15' }}
+          animate={{ borderColor: ['#ffffff15', '#f7768e', '#ffffff15'] }}
+          transition={{ duration: 1.6, repeat: Infinity }}
+        >
+          🔒 secrets
+        </motion.div>
+        <motion.div
+          className="tile"
+          initial={{ opacity: 0.6 }}
+          animate={{ opacity: [0.6, 1, 0.6] }}
+          transition={{ duration: 1.6, repeat: Infinity }}
+        >
+          🚫 leaks
+        </motion.div>
+      </div>
+      <div className="legend">no secret data to public sinks</div>
+    </div>
+  )
+}
+
+export function ResilienceAnim(): React.ReactElement {
+  const boxes = Array.from({ length: 8 }, (_, i) => i)
+  return (
+    <div className="anim">
+      <div className="anim-title">Resilience</div>
+      <div className="lane" style={{ height: 100 }}>
+        {boxes.map((i) => (
+          <motion.div
+            key={i}
+            className="bubble"
+            style={{ background: '#7aa2f7', width: 10, height: 10 }}
+            initial={{ x: -20, y: (i % 4) * 12 - 20, opacity: 0.8 }}
+            animate={{ x: 240, opacity: [0.8, 1, 0.8] }}
+            transition={{ duration: 3 + i * 0.2, delay: i * 0.15, repeat: Infinity, ease: 'easeInOut' }}
+          />
+        ))}
+      </div>
+      <div className="legend">overload with inputs, system stays up</div>
+    </div>
+  )
+}
+
 

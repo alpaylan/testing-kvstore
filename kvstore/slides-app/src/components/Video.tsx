@@ -13,7 +13,7 @@ type VideoProps = {
 }
 
 // Map all assets under /src/videos to URLs at build/dev time
-const videoMap = (import.meta as any).glob('/src/videos/*', { eager: true, as: 'url' }) as Record<string, string>
+const videoMap = (import.meta as any).glob('/src/videos/*', { eager: true, query: '?url', import: 'default' }) as Record<string, string>
 
 export function getVideoUrl(file: string): string | undefined {
   const normalized = file.startsWith('/') ? file : `/src/videos/${file}`
