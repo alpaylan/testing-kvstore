@@ -12,13 +12,13 @@ type VideoProps = {
   children?: React.ReactNode // fallback content if file not found or unsupported
 }
 
-// Map all assets under /src/videos to URLs at build/dev time
-const videoMap = (import.meta as any).glob('/src/videos/*', { eager: true, query: '?url', import: 'default' }) as Record<string, string>
-
-export function getVideoUrl(file: string): string | undefined {
-  const normalized = file.startsWith('/') ? file : `/src/videos/${file}`
-  return videoMap[normalized]
+function ensureTrailingSlash(s: string): string {
+  return s.endsWith('/') ? s : `${s}/`
 }
+
+// Base URL for serving videos. Default to /videos/, can be overridden via env.
+// For Cloudflare Pages + Vite, define VITE_VIDEOS_BASE_URL in project settings when hosting on R2/Stream/CDN.
+const VIDEO_BASE_URL = ensureTrailingSlash(import.meta.env.VITE_VIDEOS_BASE_URL ?? '/videos/')
 
 function guessMime(file: string): string | undefined {
   const ext = file.split('.').pop()?.toLowerCase()
@@ -41,16 +41,23 @@ function getAvailableSources(file: string): Array<{ url: string; type?: string }
   // Prefer Safari-friendly formats first
   const preferredExts = ['mp4', 'webm', 'mkv']
   const stem = getStem(file)
-  const candidates = preferredExts
-    .map(ext => `/src/videos/${stem}.${ext}`)
-    .filter(path => videoMap[path])
-    .map(path => ({ url: videoMap[path], type: guessMime(path) }))
+  const explicitHasExt = file.includes('.')
 
-  // If the original parameter included an extension that isn't present in candidates, try it explicitly
-  if (file.includes('.')) {
-    const explicit = file.startsWith('/') ? file : `/src/videos/${file}`
-    if (videoMap[explicit] && !candidates.find(c => c.url === videoMap[explicit])) {
-      candidates.push({ url: videoMap[explicit], type: guessMime(explicit) })
+  // Construct URLs without pre-validating existence; the browser will try in order.
+  const candidates: Array<{ url: string; type?: string }> = preferredExts.map(ext => {
+    const path = `${stem}.${ext}`
+    const url = `${VIDEO_BASE_URL}${path}`
+    return { url, type: guessMime(path) }
+  })
+
+  // If an explicit extension was provided, prefer it first by unshifting
+  if (explicitHasExt) {
+    const explicitPath = file
+    const explicitUrl = `${VIDEO_BASE_URL}${explicitPath}`
+    const explicitType = guessMime(explicitPath)
+    // Put the explicit candidate at the front if not already first
+    if (!candidates.find(c => c.url === explicitUrl)) {
+      candidates.unshift({ url: explicitUrl, type: explicitType })
     }
   }
   return candidates

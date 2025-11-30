@@ -71,7 +71,6 @@ export function SlideDeck(props: SlideDeckProps): React.ReactElement {
         goPrev()
       } else if (e.key === 'PageDown' || e.key === 'Enter') {
         e.preventDefault()
-        if (hasVideo && !videoEnded && !slideWatched) return
         if (slideIndex < totalSlides - 1) {
           setSlideIndex(slideIndex + 1)
           setStepIndex(0)
@@ -114,13 +113,12 @@ export function SlideDeck(props: SlideDeckProps): React.ReactElement {
           >« Slide</button>
           <button
             onClick={() => {
-              if (hasVideo && !videoEnded && !slideWatched) return
               if (slideIndex < totalSlides - 1) {
                 setSlideIndex(slideIndex + 1)
                 setStepIndex(0)
               }
             }}
-            disabled={slideIndex >= totalSlides - 1 || (hasVideo && !videoEnded && !slideWatched)}
+            disabled={slideIndex >= totalSlides - 1}
             aria-label="Next slide"
             title="Next slide (Enter/PageDown)"
           >Slide »</button>
